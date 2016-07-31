@@ -6,7 +6,7 @@ class SearchController extends PageController {
 
 		parent::__construct();
 		$this->dbc = $dbc; 
-		$this->mustbeLoggedIn(); 
+		$this->mustBeLoggedIn(); 
 		$this->getSearch();
 	} 
 
@@ -17,8 +17,9 @@ class SearchController extends PageController {
 
 	public function getSearch() {
 
-		if(! isset($_POST['search'])) {
+		if(strlen($_POST['search']) === 0) {
 			$searchTerm = ""; 
+			
 			
 
 		}else{
@@ -26,7 +27,23 @@ class SearchController extends PageController {
 			$searchTerm = strtolower($result);
 		} 
 
-		$this->data['searchTerm'] = $searchTerm;
+		$this->data['searchTerm'] = $searchTerm; 
+
+		$sql = "SELECT posts.id, title AS score_title, description AS score_description
+				FROM posts
+				WHERE 
+					title LIKE '%$searchTerm%' OR 
+					description LIKE '%$searchTerm%'
+					ORDER BY score_title ASC"; 
+
+		$result = $this->dbc->query($sql); 
+
+		if( ! $result || $result->num_rows == 0) {
+			$this->data['searchResults'] = "No results";
+
+		}else{
+			$this->data['searchResults'] = $result->fetch_all(MYSQLI_ASSOC);
+		}
 
 	}
 
